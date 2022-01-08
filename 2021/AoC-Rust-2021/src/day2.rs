@@ -46,7 +46,7 @@ impl Position {
     }
 
     fn consume_message(&self, input: PositionMessage) -> Position {
-        let new_x: i32 = self.x + input.x;
+        // let new_x: i32 = self.x + input.x;
         let new_aim: i32 = self.aim + input.depth;
         Position {
             x: self.x + input.x,
