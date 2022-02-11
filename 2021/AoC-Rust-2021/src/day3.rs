@@ -2,6 +2,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 // use itertools::Itertools;
 // use byteorder::{BigEndian, ReadBytesExt};
 use std::str;
+use std::error::Error;
 
 #[aoc_generator(day3)]
 fn day3_input(input: &str) -> Vec<Vec<u8>> {
@@ -36,30 +37,29 @@ fn day3_part1(input: &[Vec<u8>]) -> i32 {
     gamma * epsilon
 }
 
-fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Vec<u8> {
-    let mut bit_holder: Vec<u8> = Vec::new();
+fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec<u8>, Error> {
     let mut inner_variable: i8 = 0;
     for line in input {
         let val: i8 = line[next].try_into().unwrap();
         inner_variable = inner_variable + (val * 2) - 1;
     }
-    match oxygen {
+    let current_bit: u8 = match oxygen {
         true => match inner_variable {
-            i if i >= 0 => bit_holder.push(1),
-            i if i < 0 => bit_holder.push(0),
+            i if i >= 0 => 1,
+            i if i < 0 => 0,
             _ => panic!("Oxygen counter received: {:?}", inner_variable)
         },
         false => match inner_variable {
-            i if i >= 0 => bit_holder.push(0),
-            i if i < 0 => bit_holder.push(1),
+            i if i >= 0 => 0,
+            i if i < 0 => 1,
             _ => panic!("CO2 counter received: {:?}", inner_variable)
         }
-    }
-    let working_input: Vec<Vec<u8>> = input.iter().filter(|l| l[next] == *bit_holder.last().unwrap()).cloned().collect();
+    };
+    let working_input: Vec<Vec<u8>> = input.iter().filter(|l| l[next] == current_bit).cloned().collect();
     if working_input.len() == 1 {
-        bit_holder
+        Ok(vec![current_bit]);
     } else {
-        generate_readings(&working_input, oxygen, next+1)
+        Ok(vec![current_bit, generate_readings(&working_input, oxygen, next+1).unwrap()])
     }
 }
 
