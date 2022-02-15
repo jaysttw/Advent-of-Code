@@ -37,7 +37,7 @@ fn day3_part1(input: &[Vec<u8>]) -> i32 {
     gamma * epsilon
 }
 
-fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec<u8>, Error> {
+fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut inner_variable: i8 = 0;
     for line in input {
         let val: i8 = line[next].try_into().unwrap();
@@ -57,9 +57,10 @@ fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec
     };
     let working_input: Vec<Vec<u8>> = input.iter().filter(|l| l[next] == current_bit).cloned().collect();
     if working_input.len() == 1 {
-        Ok(vec![current_bit]);
+        Ok(vec![current_bit])
     } else {
-        Ok(vec![current_bit, generate_readings(&working_input, oxygen, next+1).unwrap()])
+        let other = generate_readings(&working_input, oxygen, next+1).unwrap();
+        Ok(vec![current_bit].iter().copied().chain(other.iter().copied()).collect::<Vec<u8>>())
     }
 }
 
@@ -74,8 +75,8 @@ fn day3_part2(input: &[Vec<u8>]) -> u8 {
         4. Continue until only 1 input remains OR only 1 digit remains.
             * The latter condition implies the former, so only the former needs to be implemented.
     */
-    let oxygen_vec: Vec<u8> = generate_readings(input, true, 0);
-    let carbon_dioxide_vec: Vec<u8> = generate_readings(input, false, 0);
+    let oxygen_vec: Vec<u8> = generate_readings(input, true, 0).unwrap();
+    let carbon_dioxide_vec: Vec<u8> = generate_readings(input, false, 0).unwrap();
 
     // let oxygen: u32 = u32::from_be_bytes(oxygen_vec);
     // let carbon_dioxide: u32 = u32::from_be_bytes(carbon_dioxide_vec);
