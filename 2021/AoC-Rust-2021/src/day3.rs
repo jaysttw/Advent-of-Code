@@ -87,7 +87,7 @@ fn day3_part2(input: &[Vec<u8>]) -> u8 {
     // let oxygen: u32 = u32::from_be_bytes(oxygen_vec);
     // let carbon_dioxide: u32 = u32::from_be_bytes(carbon_dioxide_vec);
 
-    println!("Oxygen vector: {:?}", oxygen_vec);
+    println!("Oxygen vector: {:?}, length: {:}", oxygen_vec, oxygen_vec.len());
 
     let mut oxygen = 0;
     for bit in 0..oxygen_vec.len() {
@@ -95,7 +95,7 @@ fn day3_part2(input: &[Vec<u8>]) -> u8 {
         oxygen += oxygen_vec[bit];
     }
 
-    println!("CO2 vector: {:?}", carbon_dioxide_vec);
+    println!("CO2 vector:    {:?}, length: {:}", carbon_dioxide_vec, carbon_dioxide_vec.len());
 
     let mut carbon_dioxide = 0;
     for bit in 0..carbon_dioxide_vec.len() {
