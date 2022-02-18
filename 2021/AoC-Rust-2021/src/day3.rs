@@ -2,7 +2,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 // use itertools::Itertools;
 // use byteorder::{BigEndian, ReadBytesExt};
 use std::str;
-use std::error::Error;
+use anyhow::{anyhow, Result};
 
 #[aoc_generator(day3)]
 fn day3_input(input: &str) -> Vec<Vec<u8>> {
@@ -37,7 +37,7 @@ fn day3_part1(input: &[Vec<u8>]) -> i32 {
     gamma * epsilon
 }
 
-fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec<u8>, Box<dyn Error>> {
+fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec<u8>, anyhow::Error> {
     let mut current_count: i8 = 0;
     println!("Assigned inner variable for next: {:?}, input length: {:}", next, input.len()); // debug
     for line in input {
@@ -62,7 +62,20 @@ fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec
     let working_input: Vec<Vec<u8>> = input.iter().filter(|l| l[next] == test_bit).cloned().collect();
     // println!("New working input ({:}): {:}", next, working_input.len());
     if working_input.len() <= 1 {
-        Ok(vec![current_bit])
+        let rest_of_sequence: Vec<u8> = working_input[0][next+1..].to_owned();
+        println!("DEBUG: Current working_input: {:?}", working_input);
+        println!("DEBUG: Rest of sequence: {:?}", rest_of_sequence);
+        let mut result_vec: Vec<Result<u8, anyhow::Error>> = vec![Ok(current_bit)];
+        for bit in rest_of_sequence {
+            let append_bit: Result<u8, anyhow::Error> = match bit {
+                _x if _x == "1".as_bytes().to_owned()[0] => Ok(1),
+                _x if _x == "0".as_bytes().to_owned()[0] => Ok(0),
+                _ => Err(anyhow!("Unrecognised bit"))
+            };
+            result_vec.push(append_bit);
+        }
+        result_vec.into_iter().collect()
+        // Ok(vec![current_bit])
     } else {
         let other = generate_readings(&working_input, oxygen, next+1).unwrap();
         Ok(vec![current_bit].iter().copied().chain(other.iter().copied()).collect::<Vec<u8>>())
@@ -70,7 +83,7 @@ fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec
 }
 
 #[aoc(day3, part2)]
-fn day3_part2(input: &[Vec<u8>]) -> u8 {
+fn day3_part2(input: &[Vec<u8>]) -> i32 {
     /* Logic:
         1. Iterate through the input, and generate the count for the first bit.
         2. Remove the offending entries according to the logic.
@@ -89,19 +102,23 @@ fn day3_part2(input: &[Vec<u8>]) -> u8 {
 
     println!("Oxygen vector: {:?}, length: {:}", oxygen_vec, oxygen_vec.len());
 
-    let mut oxygen = 0;
+    let mut oxygen: i32 = 0;
     for bit in 0..oxygen_vec.len() {
         oxygen *= 2;
-        oxygen += oxygen_vec[bit];
+        oxygen += oxygen_vec[bit] as i32;
     }
+
+    println!("Oxygen value: {:}", oxygen);
 
     println!("CO2 vector:    {:?}, length: {:}", carbon_dioxide_vec, carbon_dioxide_vec.len());
 
-    let mut carbon_dioxide = 0;
+    let mut carbon_dioxide: i32 = 0;
     for bit in 0..carbon_dioxide_vec.len() {
         carbon_dioxide *= 2;
-        carbon_dioxide += carbon_dioxide_vec[bit];
+        carbon_dioxide += carbon_dioxide_vec[bit] as i32;
     }
+
+    println!("CO2 value: {:}", carbon_dioxide);
     
     oxygen * carbon_dioxide
 }
