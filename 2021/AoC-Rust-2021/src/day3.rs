@@ -6,7 +6,7 @@ use std::error::Error;
 
 #[aoc_generator(day3)]
 fn day3_input(input: &str) -> Vec<Vec<u8>> {
-    input.lines().map(|l| l.as_bytes().to_owned()).collect() // need to map to bits
+    input.lines().map(|l| l.as_bytes().to_owned()).collect() // need to map to bytes
 }
 
 #[aoc(day3, part1)]
@@ -38,25 +38,30 @@ fn day3_part1(input: &[Vec<u8>]) -> i32 {
 }
 
 fn generate_readings(input: &[Vec<u8>], oxygen: bool, next: usize) -> Result<Vec<u8>, Box<dyn Error>> {
-    let mut inner_variable: i8 = 0;
+    let mut current_count: i8 = 0;
+    println!("Assigned inner variable for next: {:?}, input length: {:}", next, input.len()); // debug
     for line in input {
         let val: i8 = line[next].try_into().unwrap();
-        inner_variable = inner_variable + (val * 2) - 1;
+        current_count = current_count + (val * 2) - 1;
     }
+    println!("Current count ({:}): {:}", next, current_count);
     let current_bit: u8 = match oxygen {
-        true => match inner_variable {
+        true => match current_count {
             i if i >= 0 => 1,
             i if i < 0 => 0,
-            _ => panic!("Oxygen counter received: {:?}", inner_variable)
+            _ => panic!("Oxygen counter received: {:?}", current_count)
         },
-        false => match inner_variable {
+        false => match current_count {
             i if i >= 0 => 0,
             i if i < 0 => 1,
-            _ => panic!("CO2 counter received: {:?}", inner_variable)
+            _ => panic!("CO2 counter received: {:?}", current_count)
         }
     };
-    let working_input: Vec<Vec<u8>> = input.iter().filter(|l| l[next] == current_bit).cloned().collect();
-    if working_input.len() == 1 {
+    // println!("{:}: {:}, {:}", next, current_count, current_bit);
+    let test_bit: u8 = current_bit.to_string().as_bytes().to_owned()[0];
+    let working_input: Vec<Vec<u8>> = input.iter().filter(|l| l[next] == test_bit).cloned().collect();
+    // println!("New working input ({:}): {:}", next, working_input.len());
+    if working_input.len() <= 1 {
         Ok(vec![current_bit])
     } else {
         let other = generate_readings(&working_input, oxygen, next+1).unwrap();
@@ -75,21 +80,26 @@ fn day3_part2(input: &[Vec<u8>]) -> u8 {
         4. Continue until only 1 input remains OR only 1 digit remains.
             * The latter condition implies the former, so only the former needs to be implemented.
     */
+
     let oxygen_vec: Vec<u8> = generate_readings(input, true, 0).unwrap();
     let carbon_dioxide_vec: Vec<u8> = generate_readings(input, false, 0).unwrap();
 
     // let oxygen: u32 = u32::from_be_bytes(oxygen_vec);
     // let carbon_dioxide: u32 = u32::from_be_bytes(carbon_dioxide_vec);
 
+    println!("Oxygen vector: {:?}", oxygen_vec);
+
     let mut oxygen = 0;
     for bit in 0..oxygen_vec.len() {
-        oxygen <<= 1;
+        oxygen *= 2;
         oxygen += oxygen_vec[bit];
     }
 
+    println!("CO2 vector: {:?}", carbon_dioxide_vec);
+
     let mut carbon_dioxide = 0;
     for bit in 0..carbon_dioxide_vec.len() {
-        carbon_dioxide <<= 1;
+        carbon_dioxide *= 2;
         carbon_dioxide += carbon_dioxide_vec[bit];
     }
     
