@@ -17,7 +17,9 @@ struct InputError {
 
 impl InputError {
     fn new(msg: &str) -> InputError {
-        InputError{culprit: msg.to_string()}
+        InputError {
+            culprit: msg.to_string(),
+        }
     }
 }
 
@@ -47,15 +49,27 @@ impl Round {
                 Play::Scissors => 3,
                 _ => panic!("Unidentified type in round for other!"),
             },
-            Play::Rock | Play::Paper => {
-                if &self.1 > &self.0 {
-                    6
-                } else if &self.1 == &self.0 {
-                    3
-                } else {
-                    0
-                }
+            Play::Rock => match &self.0 {
+                Play::Rock => 3,
+                Play::Paper => 0,
+                Play::Scissors => 6,
+                _ => panic!("Unidentified type in round for other!"),
             }
+            Play::Paper=> match &self.0 {
+                Play::Rock => 6,
+                Play::Paper => 3,
+                Play::Scissors => 0,
+                _ => panic!("Unidentified type in round for other!"),
+            },
+            //  => {
+            //     if &self.1 > &self.0 {
+            //         6
+            //     } else if &self.1 == &self.0 {
+            //         3
+            //     } else {
+            //         0
+            //     }
+            // }
             _ => panic!("Cannot calculate round score: unidentified self type"),
         }
     }
@@ -94,10 +108,7 @@ fn string_to_round(line: &str) -> Round {
 #[aoc_generator(day2)]
 fn part1_input(input: &str) -> Vec<Round> {
     // should panic if unexpected input found
-    let vec_input: Vec<Round> = input
-        .lines()
-        .map(|l| string_to_round(l))
-        .collect();
+    let vec_input: Vec<Round> = input.lines().map(|l| string_to_round(l)).collect();
 
     vec_input
 }
@@ -126,8 +137,16 @@ fn part1(input: &[Round]) -> i32 {
 mod tests {
     use super::*;
 
-    // #[test]
-    // fn part1_first() {
-    //     assert_eq!(part1(vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263]), 7)
-    // }
+    #[test]
+    fn part1_first() {
+        assert_eq!(string_to_round("A X").score(), 4);
+        assert_eq!(string_to_round("A Y").score(), 8);
+        assert_eq!(string_to_round("A Z").score(), 3);
+        assert_eq!(string_to_round("B X").score(), 1);
+        assert_eq!(string_to_round("B Y").score(), 5);
+        assert_eq!(string_to_round("B Z").score(), 9);
+        assert_eq!(string_to_round("C X").score(), 7);
+        assert_eq!(string_to_round("C Y").score(), 2);
+        assert_eq!(string_to_round("C Z").score(), 6);
+    }
 }
