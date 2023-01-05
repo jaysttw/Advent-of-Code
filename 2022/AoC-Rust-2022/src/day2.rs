@@ -77,6 +77,44 @@ impl Round {
     fn score(&self) -> i32 {
         self.hand_score() + self.round_score()
     }
+
+    fn new_hand_score(&self) -> i32 {
+        match &self.1 {
+            Play::Scissors => match &self.0 {
+                Play::Rock => 2,
+                Play::Paper => 3,
+                Play::Scissors => 1,
+                _ => panic!("Unidentified type in round for other!"),
+            },
+            Play::Paper=> match &self.0 {
+                Play::Rock => 1,
+                Play::Paper => 2,
+                Play::Scissors => 3,
+                _ => panic!("Unidentified type in round for other!"),
+            },
+            Play::Rock => match &self.0 {
+                Play::Rock => 3,
+                Play::Paper => 1,
+                Play::Scissors => 2,
+                _ => panic!("Unidentified type in round for other!"),
+            },
+            _ => panic!("Cannot calculate round score: unidentified self type"),
+        }
+    }
+
+    fn new_round_score(&self) -> i32 {
+        // Note that the types retain the same name even though they now mean the result.
+        match &self.1 {
+            Play::Rock => 0,
+            Play::Paper => 3,
+            Play::Scissors => 6,
+            _ => panic!("Cannot calculate round score: unidentified self type"),
+        }
+    }
+
+    fn new_score(&self) -> i32 {
+        self.new_hand_score() + self.new_round_score()
+    }
 }
 
 fn string_to_round(line: &str) -> Round {
@@ -121,6 +159,20 @@ fn part1(input: &[Round]) -> i32 {
     let result = input
         .iter()
         .map(|r| r.score())
+        .collect::<Vec<i32>>()
+        .into_iter()
+        .sum();
+    result
+}
+
+#[aoc(day2, part2, mine)]
+fn part2(input: &[Round]) -> i32 {
+    // let result = input.iter().map(|v| v.iter().sum()).collect::<Vec<i32>>();
+    // sum_of_n_highest(&result, 1)
+    // result.into_iter().max().unwrap()
+    let result = input
+        .iter()
+        .map(|r| r.new_score())
         .collect::<Vec<i32>>()
         .into_iter()
         .sum();
