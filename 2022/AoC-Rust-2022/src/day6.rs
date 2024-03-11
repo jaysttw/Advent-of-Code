@@ -1,11 +1,5 @@
-use aoc_runner_derive::{aoc, aoc_generator};
+use aoc_runner_derive::aoc;
 use std::collections::HashSet;
-
-// #[aoc_generator(day6)]
-// fn part1_input(input: &str) -> &str {
-//     // pass directly to the function?
-//     input
-// }
 
 fn find_distinct_characters(input: &str, n: usize) -> usize {
     let cs: Vec<char> = input.chars().collect();
