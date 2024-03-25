@@ -104,14 +104,20 @@ impl Node {
 fn total_size_of_children_dir_under(
     node: Node,
     target: usize,
+    lt: bool,
+    eq: bool,
 ) -> Vec<usize> {
-    /// Returns `vec` of sizes of children of `node` where size < `target`.
+    /// Returns `vec` of sizes of children of `node` where size <, <=, >, >=
+    /// `target` depending on the parameters.
     /// 
     /// If `node` has no children, then it should return a `vec` with only one
     /// item: the size of `node`, or 0. Otherwise, it should return a `vec`
     /// with a `vec` of the size of the results of itself called recursively on
-    /// its children, and the size of `node` if it's larger than `target`, or
-    /// 0.
+    /// its children, and the size of `node` if it matches the `target`
+    /// condition, or 0.
+    /// 
+    /// * `lt`: less than
+    /// * `eq`: equal
     let mut list: Vec<usize> = vec![];
 
     if !node.children.is_empty() {
@@ -119,14 +125,28 @@ fn total_size_of_children_dir_under(
         let child_results: Vec<usize> = node
         .children
         .iter()
-        .map(|c| total_size_of_children_dir_under(c.clone(), target))
+        .map(|c| total_size_of_children_dir_under(c.clone(), target, lt, eq))
         .flatten()
         .collect();
         
         list.extend(child_results);
 
-        if node.size <= target {
-            list.push(node.size);
+        if lt && eq {
+            if node.size <= target {
+                list.push(node.size);
+            }
+        } else if lt && !eq {
+            if node.size < target {
+                list.push(node.size);
+            }
+        } else if !lt && eq {
+            if node.size >= target {
+                list.push(node.size);
+            }
+        } else {
+            if node.size > target {
+                list.push(node.size);
+            }
         }
     }
     list
@@ -145,9 +165,8 @@ fn part1_input(input: &str) -> Node {
     Node::from_inputs("/".to_owned(), &mut input.lines().skip(1))
 }
 
-#[aoc(day7, part1, mine)]
-fn part1(dir: &Node) -> usize {
-    let sample_input = "$ ls
+fn generate_sample() -> Node {
+    let sample_input: &str = "$ ls
 dir a
 14848514 b.txt
 8504156 c.dat
@@ -170,12 +189,50 @@ $ ls
 5626152 d.ext
 7214296 k";
     
-    let sample_node: Node = Node::from_inputs("/".to_owned(), &mut sample_input.lines());
-    let sample_vector: Vec<usize> = total_size_of_children_dir_under(sample_node, 100000);
+    Node::from_inputs("/".to_owned(), &mut sample_input.lines())
+}
+
+#[aoc(day7, part1, mine)]
+fn part1(dir: &Node) -> usize {
+    let sample_vector: Vec<usize> = total_size_of_children_dir_under(
+        generate_sample(),
+        100000,
+        true,
+        true
+    );
     let sample_result: usize = sample_vector.iter().sum();
     
     println!("Sample vector: {:?}", sample_vector);
     println!("Sample node result: {}", sample_result);
 
-    total_size_of_children_dir_under(dir.clone(), 100000).iter().sum()
+    total_size_of_children_dir_under(
+        dir.clone(),
+        100000,
+        true,
+        true
+    ).iter().sum()
+}
+
+#[aoc(day7, part2, mine)]
+fn part2(dir: &Node) -> usize {
+    let sample_space = generate_sample().size - 40000000;
+    let sample_vector: Vec<usize> = total_size_of_children_dir_under(
+        generate_sample(),
+        sample_space,
+        false,
+        true
+    );
+    let sample_result: usize = *sample_vector.iter().min().unwrap();
+
+    println!("Sample vector: {:?}", sample_vector);
+    println!("Sample node result: {}", sample_result);
+
+    let free_space_req = dir.size - 40000000;
+
+    *total_size_of_children_dir_under(
+        dir.clone(),
+        free_space_req,
+        false,
+        true
+    ).iter().min().unwrap()
 }
