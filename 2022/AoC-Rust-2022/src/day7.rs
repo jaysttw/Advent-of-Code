@@ -1,36 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-// struct Directory {
-//     name: String,
-//     children: Vec<Node>,
-// }
-
-// impl Directory {
-//     fn size(&self) -> usize {
-//         if self.children.len() == 0 {
-//             0
-//         } else {
-//             self.children.iter().map(|s| s.size()).sum::<usize>()
-//         }
-//     }
-// }
-
-// enum Node {
-//     File(File),
-//     Directory(Directory),
-// }
-
-// struct File {
-//     name: String,
-//     size: usize,
-// }
-
-// impl File {
-//     fn size(&self) -> usize {
-//         self.size
-//     }
-// }
-
 #[derive(Clone)]
 struct Node {
     name: String,
@@ -174,30 +143,6 @@ fn part1_input(input: &str) -> Node {
     println!("Processing input...");
 
     Node::from_inputs("/".to_owned(), &mut input.lines().skip(1))
-
-    // for line in input.lines().skip(1) {
-    //     if line.starts_with("$ cd") {
-    //         // start with matching directory
-    //         if line.split(' ').collect::<Vec<&str>>().len() == 3 {
-    //             let dir = line.split(' ').collect()[2];
-    //             if dir = ".." {} else if dir = "/" {
-    //                 panic!("Second root directory encountered!");
-    //             } else {}
-    //         }
-    //     } else if line.starts_with("dir ") {
-    //         // handle directory
-    //     } else {
-    //         // Other cases, including starting with filesize.
-    //         // Deliberate choice to put filesize in here so no need to resort
-    //         // to regex.
-    //         if line.split(' ').collect::<Vec<&str>>.len() == 2 {
-    //             let v: Vec<&str> = line.split(' ').collect();
-    //             if let Some(filesize) = v[0].parse::<usize>().unwrap() {
-    //                 let filename: &str = v[1];
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 #[aoc(day7, part1, mine)]
