@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[derive(Debug)]
-struct InputLengthError {
+pub struct InputLengthError {
     expected: usize,
     actual: usize,
     items: String,
@@ -20,7 +20,7 @@ impl fmt::Display for InputLengthError {
 }
 
 impl InputLengthError {
-    fn new(expected: usize, actual: usize, msg: String) -> InputLengthError {
+    pub fn new(expected: usize, actual: usize, msg: String) -> InputLengthError {
         InputLengthError {
             expected: expected,
             actual: actual,
