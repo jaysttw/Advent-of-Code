@@ -110,16 +110,14 @@ impl Step {
 }
 
 struct Grid {
-    head: (isize, isize),
-    tail: (isize, isize),
+    knots: Vec<(isize, isize)>,
     tail_history: (Vec<isize>, Vec<isize>),
 }
 
 impl Grid {
-    fn new() -> Grid {
+    fn new(length: usize) -> Grid {
         Grid {
-            head : (0,0),
-            tail : (0,0),
+            knots: vec![(0isize, 0isize); length],
             tail_history: (vec![0], vec![0]),
         }
     }
@@ -128,98 +126,140 @@ impl Grid {
         let mut result: Grid = self;
         for _ in 0..step.steps {
             let new_head = match step.direction {
-                Direction::Up => (result.head.0, result.head.1 + 1),
-                Direction::Down => (result.head.0, result.head.1 - 1),
-                Direction::Left => (result.head.0 - 1, result.head.1),
-                Direction::Right => (result.head.0 + 1, result.head.1),
+                Direction::Up => (result.knots[0].0, result.knots[0].1 + 1),
+                Direction::Down => (result.knots[0].0, result.knots[0].1 - 1),
+                Direction::Left => (result.knots[0].0 - 1, result.knots[0].1),
+                Direction::Right => (result.knots[0].0 + 1, result.knots[0].1),
             };
-            println!(
-                "Current head: {:?}, new head: {:?}",
-                result.head,
-                new_head
+            // println!(
+            //     "Current head: {:?}, new head: {:?}",
+            //     result.knots[0],
+            //     new_head
+            // );
+
+            // let temp: Vec<(isize, isize)> = [
+            //     vec![new_head].as_slice(),
+            //     &result.knots[1..],
+            // ].concat()
+            // .to_vec();
+            
+            // println!("Knots before adding {:?}: {:?}", new_head, result.knots);
+
+            // let body: Vec<(isize, isize)> = temp.windows(2)
+            // .map(
+            //     |v| Self::update_knot(v[0], v[1])
+            // ).collect();
+
+            // let new_knots: Vec<(isize, isize)> = [
+            //     vec![new_head].as_slice(),
+            //     body.as_slice(),
+            // ].concat()
+            // .to_vec();
+
+            let mut new_knots_acc: Vec<(isize, isize)> = result.knots[1..]
+            .iter()
+            .fold(
+                vec![new_head],
+                |acc, k| Self::update_knot(acc, *k)
             );
 
-            // println!("Current tail history: {:?}", result.tail_history);
+            let new_knots: Vec<(isize, isize)> = new_knots_acc;
 
-            result = result.update_tail(new_head);
+            // println!("Knots after adding {:?}: {:?}", new_head, new_knots);
+            
+            let new_tail_history = Self::update_tail_history(
+                result.tail_history,
+                new_knots[new_knots.len() - 1],
+            );
+
+            // println!("Tail history: {:?}", new_tail_history);
+
+            result = Grid {
+                knots: new_knots,
+                tail_history: new_tail_history,
+            };
         }
 
         result
     }
 
-    fn update_tail(self, new_head: (isize, isize)) -> Grid {
-        if new_head.0.abs_diff(self.tail.0) <= 1 && 
-        new_head.1.abs_diff(self.tail.1) <= 1 {
-            // Assumes that we're only counting individual visits to the spot,
-            // not staying on the spot for example.
-            return Grid {
-                head : new_head,
-                tail : self.tail.clone(),
-                tail_history : self.tail_history.clone(),
-            }
-        } else if new_head.0.abs_diff(self.tail.0) == 2 && 
-        new_head.1.abs_diff(self.tail.1) <= 1 {
-            // handle case if x-axis
-            let new_one: isize = if new_head.1.abs_diff(self.tail.1) == 1 {
-                if new_head.1 > self.tail.1 {
-                    self.tail.1 + 1
+    fn update_knot(
+        knots: Vec<(isize, isize)>,
+        tail: (isize, isize),
+    ) -> Vec<(isize, isize)> {
+        let head: (isize, isize) = knots[knots.len() - 1];
+        let mut new_knots: Vec<(isize, isize)> = knots.clone();
+        new_knots.push(
+            if head.0.abs_diff(tail.0) <= 1 && 
+            head.1.abs_diff(tail.1) <= 1 {
+                tail
+            } else if head.0.abs_diff(tail.0) == 2 && head.1.abs_diff(tail.1) <= 1 {
+                // handle case if x-axis
+                let new_one: isize = if head.1.abs_diff(tail.1) == 1 {
+                    if head.1 > tail.1 {
+                        tail.1 + 1
+                    } else {
+                        tail.1 - 1
+                    }
+                } else { tail.1 };
+                if head.0 < tail.0 {
+                    (tail.0 - 1, new_one)
                 } else {
-                    self.tail.1 - 1
+                    (tail.0 + 1, new_one)
                 }
-            } else { self.tail.1 };
-            let new_tail: (isize, isize) = if new_head.0 < self.tail.0 {
-                (self.tail.0 - 1, new_one)
-            } else {
-                (self.tail.0 + 1, new_one)
-            };
-
-            let new_tail_history: (Vec<isize>, Vec<isize>) = Self::update_tail_history(self.tail_history, new_tail);
-
-            return Grid {
-                head : new_head,
-                tail : new_tail, 
-                tail_history : new_tail_history,
-            }
-        } else if new_head.0.abs_diff(self.tail.0) <= 1 && 
-        new_head.1.abs_diff(self.tail.1) == 2 {
-            // handle case if y-axis
-            let new_zero: isize = if new_head.0.abs_diff(self.tail.0) == 1 {
-                if new_head.0 > self.tail.0 {
-                    self.tail.0 + 1
+            } else if head.0.abs_diff(tail.0) <= 1 && head.1.abs_diff(tail.1) == 2 {
+                // handle case if y-axis
+                let new_zero: isize = if head.0.abs_diff(tail.0) == 1 {
+                    if head.0 > tail.0 {
+                        tail.0 + 1
+                    } else {
+                        tail.0 - 1
+                    }
+                } else { tail.0 };
+                if head.1 < tail.1 {
+                    (new_zero, tail.1 - 1)
                 } else {
-                    self.tail.0 - 1
+                    (new_zero, tail.1 + 1)
                 }
-            } else { self.tail.0 };
-            let new_tail: (isize, isize) = if new_head.1 < self.tail.1 {
-                (new_zero, self.tail.1 - 1)
+            } else if head.0.abs_diff(tail.0) == 2 && head.1.abs_diff(tail.1) == 2 {
+                let new_zero: isize = if head.0 > tail.0 {
+                    tail.0 + 1
+                } else {
+                    tail.0 - 1
+                };
+
+                let new_one: isize = if head.1 > tail.1 {
+                    tail.1 + 1
+                } else {
+                    tail.1 - 1
+                };
+
+                (new_zero, new_one)
             } else {
-                (new_zero, self.tail.1 + 1)
-            };
-
-            let new_tail_history: (Vec<isize>, Vec<isize>) = Self::update_tail_history(self.tail_history, new_tail);
-
-            return Grid {
-                head : new_head,
-                tail : new_tail, 
-                tail_history : new_tail_history,
+                panic!(
+                    "Head moved out of bounds in previous step! Head: {:?}, tail: {:?}",
+                    head,
+                    tail,
+                )
             }
-        } else {
-            panic!(
-                "Head moved out of bounds in previous step! Head: {:?}, tail: {:?}",
-                new_head,
-                self.tail,
-            )
-        }
+        );
+
+        new_knots.to_vec()
     }
 
     fn update_tail_history(cur: (Vec<isize>, Vec<isize>), new_tail: (isize, isize)) -> (Vec<isize>, Vec<isize>) {
-        let zero: Vec<isize> = [cur.0.as_slice(), vec![new_tail.0].as_slice()]
-        .concat()
-        .to_vec();
-        let one: Vec<isize> = [cur.1.as_slice(), vec![new_tail.1].as_slice()].
-        concat()
-        .to_vec();
-        (zero, one)
+        if cur.0[cur.0.len() - 1] != new_tail.0 || cur.1[cur.1.len() - 1] != new_tail.1 {
+            let zero: Vec<isize> = [cur.0.as_slice(), vec![new_tail.0].as_slice()]
+            .concat()
+            .to_vec();
+            let one: Vec<isize> = [cur.1.as_slice(), vec![new_tail.1].as_slice()]
+            .concat()
+            .to_vec();
+
+            return (zero, one)
+        } else {
+            return cur
+        };
     }
 }
 
@@ -260,7 +300,7 @@ impl GridHistory {
     }
 }
 
-fn generate_sample() -> Vec<Step> {
+fn generate_sample1() -> Vec<Step> {
     let input: &str = "R 4
 U 4
 L 3
@@ -269,6 +309,24 @@ R 4
 D 1
 L 5
 R 2";
+
+    let result: Vec<Step> = input
+    .lines()
+    .map(|l| Step::from_input(l).unwrap())
+    .collect();
+
+    result
+}
+
+fn generate_sample2() -> Vec<Step> {
+    let input: &str = "R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20";
 
     let result: Vec<Step> = input
     .lines()
@@ -291,14 +349,75 @@ fn part1_input(input: &str) -> Vec<Step> {
 #[aoc(day9, part1, mine)]
 fn part1(steps: &[Step]) -> usize {
     // code for sample
-    let sample_steps: Vec<Step> = generate_sample();
+    let sample_steps: Vec<Step> = generate_sample1();
 
     let sample_result: Grid = sample_steps
     .iter()
     .fold(
-        Grid::new(),
+        Grid::new(2),
         |acc, i| i.apply_to_grid(acc)
     );
+
+    println!("Sample grid history: {:?}", sample_result.tail_history);
+
+    let sample_history: GridHistory = GridHistory::from_history(
+        sample_result.tail_history
+    );
+
+    let sample_visited: usize = sample_history.grid
+    .iter()
+    .map(
+        |v| v.iter()
+        .map(|i| *i != 0)
+        .collect::<Vec<bool>>()
+        .iter()
+        .filter(|x| **x)
+        .count()
+    )
+    .sum();
+
+    println!("Total positions visited in sample: {}", sample_visited);
+
+    // main body
+    // let result_grid: Grid = steps
+    // .iter()
+    // .fold(
+    //     Grid::new(2),
+    //     |acc, i| i.apply_to_grid(acc)
+    // );
+
+    // let result_history: GridHistory = GridHistory::from_history(
+    //     result_grid.tail_history
+    // );
+
+    // result_history.grid
+    // .iter()
+    // .map(
+    //     |v| v.iter()
+    //     .map(|i| *i != 0)
+    //     .collect::<Vec<bool>>()
+    //     .iter()
+    //     .filter(|x| **x)
+    //     .count()
+    // )
+    // .sum()
+
+    0
+}
+
+#[aoc(day9, part2, mine)]
+fn part2(steps: &[Step]) -> usize {
+    // code for sample
+    let sample_steps: Vec<Step> = generate_sample2();
+
+    let sample_result: Grid = sample_steps
+    .iter()
+    .fold(
+        Grid::new(10),
+        |acc, i| i.apply_to_grid(acc)
+    );
+
+    println!("Sample grid history: {:?}", sample_result.tail_history);
 
     let sample_history: GridHistory = GridHistory::from_history(
         sample_result.tail_history
@@ -322,7 +441,7 @@ fn part1(steps: &[Step]) -> usize {
     let result_grid: Grid = steps
     .iter()
     .fold(
-        Grid::new(),
+        Grid::new(10),
         |acc, i| i.apply_to_grid(acc)
     );
 
