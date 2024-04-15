@@ -1,4 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
+use std::cmp;
 use std::fmt;
 use std::num::ParseIntError;
 
@@ -105,25 +106,31 @@ impl Programme {
         .cloned()
         .unzip();
 
-        let cycles: Vec<usize> = cycle_counts
-        .into_iter()
-        .scan(
-            0,
-            |acc, x| {
-                *acc += x;
-                Some(*acc)
-            }
-        ).collect();
+        let cycles: Vec<usize> = [
+            vec![0usize].as_slice(),
+            cycle_counts
+            .into_iter()
+            .scan(
+                0,
+                |acc, x| {
+                    *acc += x;
+                    Some(*acc)
+                }
+            ).collect::<Vec<usize>>().as_slice()
+        ].concat().to_vec();
 
-        let register: Vec<isize> = register_moves
-        .into_iter()
-        .scan(
-            1,
-            |acc, x| {
-                *acc += x;
-                Some(*acc)
-            }
-        ).collect();
+        let register: Vec<isize> = [
+            vec![1isize].as_slice(),
+            register_moves
+            .into_iter()
+            .scan(
+                1,
+                |acc, x| {
+                    *acc += x;
+                    Some(*acc)
+                }
+            ).collect::<Vec<isize>>().as_slice()
+        ].concat().to_vec();
 
         Programme {
             cycles : cycles,
@@ -149,7 +156,7 @@ impl Programme {
         // cycles should be sorted
         let pos: usize = match self.cycles.binary_search(&(cycle - 1)) {
             Ok(n) => n,
-            Err(n) => n-1,
+            Err(n) => if n == 0 {n} else {n-1},
         };
 
         // println!("Signal at {} is {}", cycle, self.register[pos]);
@@ -170,6 +177,57 @@ impl Programme {
         // println!("Signal strengths: {:?}", signals);
 
         signals.iter().sum()
+    }
+
+    fn draw_sprite(
+        self,
+        row_length: usize,
+        nrows: usize,
+    ) {
+        let _: Vec<_> = (0..nrows)
+        // .iter()
+        .map(
+            |x| {
+                let line: String = (0..row_length)
+                // .iter()
+                .map(
+                    |n| <Programme as Clone>::clone(&self).lit_pixel(x, n, row_length)
+                )
+                .collect::<String>();
+
+                println!("{}", line);
+            }
+        )
+        .collect();
+    }
+
+    fn lit_pixel(self, x: usize, n: usize, row_length: usize) -> char {
+        let idx: usize = (x * row_length) + n + 1;
+        // let lower_n: isize = n as isize - 1;
+        // let lower: usize = cmp::max(lower_n, 0) as usize;
+        // let upper: usize = cmp::min(n + 1, 39);
+
+        let lower: isize = n as isize - 1;
+        let upper: isize = n as isize + 1;
+
+        // println!("Index {}: Upper: {}, Lower: {}", idx, upper, lower);
+
+        let result: char = if {
+            (lower..upper+1)
+            // .iter()
+            .map(
+                |i| i == <Programme as Clone>::clone(&self).check_register(idx)
+            )
+            .collect::<Vec<bool>>()
+            .iter()
+            .any(|b| *b)
+        } {
+            '#'
+        } else {
+            '.'
+        };
+
+        result
     }
 }
 
@@ -192,6 +250,27 @@ fn part1(input: &[Instruction]) -> isize {
     let prog: Programme = Programme::from_instructions(input.to_vec());
 
     prog.signal_strength()
+}
+
+#[aoc(day10, part2, mine)]
+fn part2(input: &[Instruction]) -> usize {
+    let sample_programme: Programme = generate_sample1();
+
+    sample_programme.clone().draw_sprite(40, 6);
+
+    let sample_ten: Vec<isize> = (0..10).map(|x| sample_programme.clone().check_register(x)).collect();
+    // println!("Sample: {:?}", sample_ten);
+
+    // println!("sample cycles: {:?}", &sample_programme.cycles[0..10]);
+    // println!("sample registers: {:?}", &sample_programme.register[0..10]);
+
+    println!("\n\n");
+
+    let prog: Programme = Programme::from_instructions(input.to_vec());
+
+    prog.draw_sprite(40, 6);
+
+    0
 }
 
 fn generate_sample1() -> Programme {
