@@ -2,6 +2,8 @@ use aoc_runner_derive::{aoc, aoc_generator};
 // use itertools::Itertools;
 // use std::collections::HashSet;
 
+use crate::utils::input;
+
 fn check_safety(level: &Vec<usize>) -> bool {
     let diffs: Vec<usize> = level.windows(2).map(|w| w[0].abs_diff(w[1])).collect();
     // Debug
@@ -37,33 +39,33 @@ fn check_dampened_safety(level: &Vec<usize>) -> bool {
     }
 }
 
-fn usize_from_unbounded_enum_strln(n: usize, line: &str, sep: &str) -> Vec<usize> {
-    let result: Vec<usize> = line
-        .split(sep)
-        .map(|i| {
-            i.parse::<usize>().expect(
-                format!(
-                    "Could not parse {} from input line {}: {} into usize!",
-                    i,
-                    n,
-                    line,
-                ).as_str()
-            )
-        })
-        .collect();
+// fn usize_from_unbounded_enum_strln(n: usize, line: &str, sep: &str) -> Vec<usize> {
+//     let result: Vec<usize> = line
+//         .split(sep)
+//         .map(|i| {
+//             i.parse::<usize>().expect(
+//                 format!(
+//                     "Could not parse {} from input line {}: {} into usize!",
+//                     i,
+//                     n,
+//                     line,
+//                 ).as_str()
+//             )
+//         })
+//         .collect();
 
-    // if result.len() != length {
-    //     panic! {
-    //         "Length error! Input line {}: {}, expected length: {}, found: {}",
-    //         n,
-    //         line,
-    //         length,
-    //         result.len(),
-    //     }
-    // }
+//     // if result.len() != length {
+//     //     panic! {
+//     //         "Length error! Input line {}: {}, expected length: {}, found: {}",
+//     //         n,
+//     //         line,
+//     //         length,
+//     //         result.len(),
+//     //     }
+//     // }
 
-    result
-}
+//     result
+// }
 
 fn generate_sample() -> String {
     "7 6 4 2 1
@@ -81,7 +83,7 @@ fn generate_sample2() -> Vec<Vec<usize>> {
 
 #[aoc_generator(day2)]
 fn part1_input(input: &str) -> Vec<Vec<usize>> {
-    let result: Vec<Vec<usize>> = input.lines().enumerate().map(|(n,v)| usize_from_unbounded_enum_strln(n, v, " ")).collect();
+    let result: Vec<Vec<usize>> = input.lines().enumerate().map(|(n,v)| input::usize_from_unbounded_enum_strln(n, v, " ")).collect();
 
     // let lengths: HashSet<usize> = result.iter().map(|v| v.len()).collect();
 

@@ -1,32 +1,34 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use itertools::Itertools;
 
-fn usize_from_enum_strln(n: usize, line: &str, sep: &str, length: usize) -> Vec<usize> {
-    let result: Vec<usize> = line
-        .split(sep)
-        .map(|i| {
-            i.parse::<usize>().expect(
-                format!(
-                    "Could not parse {} from input line {}: {} into usize!",
-                    i,
-                    n,
-                    line,
-                ).as_str()
-            )
-        })
-        .collect();
+use crate::utils::input;
 
-    if result.len() != length {
-        panic! {
-            "Length error! Input line {}: {}, expected length: {}, found: {}",
-            n,
-            line,
-            length,
-            result.len(),
-        }
-    }
+// fn usize_from_enum_strln(n: usize, line: &str, sep: &str, length: usize) -> Vec<usize> {
+//     let result: Vec<usize> = line
+//         .split(sep)
+//         .map(|i| {
+//             i.parse::<usize>().expect(
+//                 format!(
+//                     "Could not parse {} from input line {}: {} into usize!",
+//                     i,
+//                     n,
+//                     line,
+//                 ).as_str()
+//             )
+//         })
+//         .collect();
 
-    result
+//     if result.len() != length {
+//         panic! {
+//             "Length error! Input line {}: {}, expected length: {}, found: {}",
+//             n,
+//             line,
+//             length,
+//             result.len(),
+//         }
+//     }
+
+//     result
 }
 
 fn generate_sample() -> String {
@@ -65,7 +67,7 @@ fn part1_input(input: &str) -> (Vec<usize>, Vec<usize>) {
     let pairs: Vec<(usize, usize)> = input
         .lines()
         .enumerate()
-        .map(|(n, l)| usize_from_enum_strln(n, l, "   ", 2).into_iter().collect_tuple::<(usize, usize)>().unwrap())
+        .map(|(n, l)| input::usize_from_enum_strln(n, l, "   ", 2).into_iter().collect_tuple::<(usize, usize)>().unwrap())
         .collect();
 
     let (left, right): (Vec<usize>, Vec<usize>) = pairs
