@@ -29,7 +29,7 @@ use crate::utils::input;
 //     }
 
 //     result
-}
+// }
 
 fn generate_sample() -> String {
     "3   4
