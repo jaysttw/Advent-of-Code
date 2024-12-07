@@ -265,6 +265,34 @@ impl SearchGrid {
         S_coords
     }
 
+    fn find_x_mas(&self) -> Vec<(usize, usize)> {
+        // Find all coordinates of A
+        let A_coords: Vec<(usize, usize)> = (1..self.x_max-1)
+        .map(|x| (1..self.y_max-1).map(|y| (x, y)).collect::<Vec<(usize, usize)>>())
+        .flatten()
+        .to_owned()
+        .collect::<Vec<(usize, usize)>>()
+        .into_iter()
+        .filter(
+            |(x,y)| match &self.grid[*y][*x].clone() {
+                Some(m) => discriminant(m) == discriminant(&GridMember::A),
+                _ => false,
+            }
+        )
+        .collect();
+
+        let result: Vec<(usize, usize)> = A_coords.into_iter().filter(|c| self.check_corners(*c)).collect();
+
+        // Debug
+        // println!("X-MAS: {:?}", result);
+        
+        result
+    }
+
+    fn count_x_mas(&self) -> usize {
+        self.find_x_mas().len()
+    }
+
     fn count_xmas(&self) -> usize {
         let paths: Vec<Vec<(usize, usize)>> = self.find_xmas();
         // Debug
@@ -280,6 +308,42 @@ impl SearchGrid {
         //     );
         // }
         paths.len()
+    }
+
+    fn check_corners(&self, input: (usize, usize)) -> bool {
+        let x: usize = input.0;
+        let y: usize = input.1;
+
+        let corners: Vec<(usize, usize)> = vec![(x-1, y-1), (x+1, y-1), (x-1, y+1), (x+1, y+1),];
+
+        let ss: Vec<(usize, usize)> = corners
+        .clone()
+        .into_iter()
+        .filter(
+            |c| match &self.grid[c.1][c.0] {
+                Some(m) => discriminant(m) == discriminant(&GridMember::S),
+                None => false,
+            }
+        )
+        .collect();
+
+        let ms: Vec<(usize, usize)> = corners
+        .clone()
+        .into_iter()
+        .filter(
+            |c| match &self.grid[c.1][c.0] {
+                Some(m) => discriminant(m) == discriminant(&GridMember::M),
+                None => false,
+            }
+        )
+        .collect();
+
+        let ss_x: HashSet<usize> = ss.clone().into_iter().map(|c| c.0).collect();
+        let ss_y: HashSet<usize> = ss.clone().into_iter().map(|c| c.1).collect();
+        let ms_x: HashSet<usize> = ms.clone().into_iter().map(|c| c.0).collect();
+        let ms_y: HashSet<usize> = ms.clone().into_iter().map(|c| c.1).collect();
+
+        (ss.len() == 2) && (ms.len() == 2) && ((ss_x.len() + ss_y.len()) == 3) && ((ms_x.len() + ms_y.len()) == 3)
     }
     
     fn check_xmas(&self, input: Vec<(usize, usize)>) -> bool {
@@ -326,5 +390,12 @@ fn part1(input: &SearchGrid) -> usize {
     count
 }
 
-// #[aoc(day4, part2, mine)]
-// fn part2(input: &SearchGrid) -> usize {}
+#[aoc(day4, part2, mine)]
+fn part2(input: &SearchGrid) -> usize {
+    let test_grid: SearchGrid = generate_sample();
+    let test_count: usize = test_grid.count_x_mas();
+    println!("Test count: {}", test_count);
+
+    let count: usize = input.count_x_mas();
+    count
+}
